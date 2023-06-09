@@ -24,6 +24,7 @@ module.exports = {
     'react-hooks/exhaustive-deps': 'warn',
     'react/react-in-jsx-scope': 'off',
     'react/self-closing-comp': 'warn',
+    'react/no-unknown-property': 'off',
     'simple-import-sort/imports': 'warn',
     'simple-import-sort/exports': 'warn',
   },

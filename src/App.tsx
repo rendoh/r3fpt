@@ -1,62 +1,55 @@
-import './App.css';
-
-import { FC, useState } from 'react';
-import { Outlet } from 'react-router';
-import { Link, RouterProvider } from 'react-router-dom';
+import { toPng } from 'html-to-image';
+import { FC, useEffect } from 'react';
+import { useState } from 'react';
+import { useMemo } from 'react';
+import { useOutlet } from 'react-router';
+import { RouterProvider, useLocation } from 'react-router-dom';
 import { createHashRouter } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
 
-import viteLogo from '/vite.svg';
+import { About } from './About/About';
+import { Brand } from './Brand/Brand';
+import { Child } from './Child/Child';
+import { Home } from './Home/Home';
+import { Sketch } from './Sketch/Sketch';
+import { useSetScreenshot } from './states/screenshot';
 
-import reactLogo from './assets/react.svg';
-
-const Root: FC = () => (
-  <div>
-    <header>
-      <Link to="/">HOME</Link>
-      <Link to="/b">B</Link>
-    </header>
-    <Outlet />
-  </div>
-);
-
-const A: FC = () => {
-  const [count, setCount] = useState(0);
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  );
+const StickyOutlet: FC = () => {
+  const o = useOutlet();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const outlet = useMemo(() => o, []);
+  return <>{outlet}</>;
 };
 
-const B: FC = () => (
-  <div>
-    <h1>
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Ea iure quas
-      natus facilis similique voluptates eveniet aperiam nostrum, quasi unde
-      distinctio mollitia fugit. Veritatis saepe quasi maxime dicta aliquid
-      nemo.
-    </h1>
-  </div>
-);
+const Root: FC = () => {
+  const { pathname } = useLocation();
+  const [lazyPathname, setLazyPathname] = useState(pathname);
+  const setScreenshot = useSetScreenshot();
+  useEffect(() => {
+    if (pathname === lazyPathname) return;
+
+    let ignore = false;
+    toPng(document.body, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: '#111',
+    }).then((dataUrl) => {
+      if (ignore) return;
+      setScreenshot(dataUrl);
+      setLazyPathname(pathname);
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [pathname, lazyPathname, setScreenshot]);
+
+  return (
+    <div>
+      <StickyOutlet key={lazyPathname} />
+      <Sketch />
+    </div>
+  );
+};
 
 const router = createHashRouter([
   {
@@ -65,11 +58,19 @@ const router = createHashRouter([
     children: [
       {
         index: true,
-        element: <A />,
+        element: <Home />,
       },
       {
-        path: '/b',
-        element: <B />,
+        path: '/about',
+        element: <About />,
+      },
+      {
+        path: '/brand',
+        element: <Brand />,
+      },
+      {
+        path: '/child',
+        element: <Child />,
       },
     ],
   },
@@ -77,9 +78,9 @@ const router = createHashRouter([
 
 function App() {
   return (
-    <>
+    <RecoilRoot>
       <RouterProvider router={router} />
-    </>
+    </RecoilRoot>
   );
 }
 

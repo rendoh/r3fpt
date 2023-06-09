@@ -1,4 +1,5 @@
-import './index.css';
+import 'the-new-css-reset';
+import './styles/global.css.ts';
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
